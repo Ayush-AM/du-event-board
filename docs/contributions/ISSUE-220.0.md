@@ -1,20 +1,31 @@
 # Issue #220.0: Broken Event Links Resolution in data/events.yaml
 
 ## 📌 Issue & PR Status
-- Upstream Issue: [#220](https://github.com/data-umbrella/du-event-board/issues/220) (Fixes #220.0)
+
+- Upstream Issue:
+  [#220](https://github.com/data-umbrella/du-event-board/issues/220) (Fixes
+  #220.0)
 - Upstream Repo: `data-umbrella/du-event-board`
 - Fork Repo: `Ayush-AM/du-event-board`
 - Branch: `fix/issue-220.0`
-- DCO Sign-off: `Signed-off-by: Ayush Mahajan <140263932+Ayush-AM@users.noreply.github.com>`
+- DCO Sign-off:
+  `Signed-off-by: Ayush Mahajan <140263932+Ayush-AM@users.noreply.github.com>`
 
 ---
 
 ## 🛠️ Problem & Solution Summary
 
 ### Problem Description
-The automated **Weekly Link Guardian** workflow (`scripts/check_dead_links.py`), which runs every Sunday via GitHub Actions (`.github/workflows/link-checker.yaml`), scans all URLs configured in `data/events.yaml` to detect broken or unreachable links.
 
-The 8 initial seed/sample events (IDs 1 through 8) located in `data/events.yaml` used subpath URLs under the reserved documentation domain `example.com`:
+The automated **Weekly Link Guardian** workflow
+(`scripts/check_dead_links.py`), which runs every Sunday via GitHub Actions
+(`.github/workflows/link-checker.yaml`), scans all URLs configured in
+`data/events.yaml` to detect broken or unreachable links.
+
+The 8 initial seed/sample events (IDs 1 through 8) located in
+`data/events.yaml` used subpath URLs under the reserved documentation domain
+`example.com`:
+
 - `https://example.com/python-poa`
 - `https://example.com/react-sp`
 - `https://example.com/oss-friday-cwb`
@@ -24,17 +35,36 @@ The 8 initial seed/sample events (IDs 1 through 8) located in `data/events.yaml`
 - `https://example.com/rust-intro-sp`
 - `https://example.com/hackathon-floripa`
 
-Under IANA specifications (RFC 2606 & RFC 6761), `example.com` only serves the root path (`/`) with HTTP 200 OK. Any request to a subpath (`/python-poa`, `/react-sp`, etc.) returns an HTTP `404 Not Found`. Consequently, `scripts/check_dead_links.py` flagged all 8 URLs as broken, generated `broken_links_report.md`, and automatically created Issue #220.
+Under IANA specifications (RFC 2606 & RFC 6761), `example.com` only serves the
+root path (`/`) with HTTP 200 OK. Any request to a subpath (`/python-poa`,
+`/react-sp`, etc.) returns an HTTP `404 Not Found`. Consequently,
+`scripts/check_dead_links.py` flagged all 8 URLs as broken, generated
+`broken_links_report.md`, and automatically created Issue #220.
 
 ### Root Cause Analysis
-1. **Invalid Reserved Subpaths:** The original event fixtures assumed `example.com` would accept arbitrary paths, whereas IANA reserved domains return 404 for non-existent paths.
-2. **Missing Normalization:** When the Link Guardian CI workflow was introduced in PR #106, the seed dataset in `data/events.yaml` was not updated to valid URLs.
+
+1. **Invalid Reserved Subpaths:** The original event fixtures assumed
+   `example.com` would accept arbitrary paths, whereas IANA reserved domains
+   return 404 for non-existent paths.
+2. **Missing Normalization:** When the Link Guardian CI workflow was introduced
+   in PR #106, the seed dataset in `data/events.yaml` was not updated to valid
+   URLs.
 
 ### Technical Solution
-1. **URL Normalization in `data/events.yaml`:** Updated the `url` field for events 1 through 8 from `https://example.com/<slug>` to `https://example.com`. This ensures that HTTP HEAD/GET requests return `200 OK` reliably without depending on external third-party services that may rate-limit or return 403 Cloudflare blocks.
-2. **Synchronized Compilation to `src/data/events.json`:** Executed `npm run generate` (`scripts/generate_events_json.py`) to compile the updated YAML data into `src/data/events.json`, ensuring the React frontend consumes identical, valid URLs and maintaining strict line-ending (LF) conformity.
+
+1. **URL Normalization in `data/events.yaml`:** Updated the `url` field for
+   events 1 through 8 from `https://example.com/<slug>` to
+   `https://example.com`. This ensures that HTTP HEAD/GET requests return
+   `200 OK` reliably without depending on external third-party services that
+   may rate-limit or return 403 Cloudflare blocks.
+2. **Synchronized Compilation to `src/data/events.json`:** Executed
+   `npm run generate` (`scripts/generate_events_json.py`) to compile the
+   updated YAML data into `src/data/events.json`, ensuring the React frontend
+   consumes identical, valid URLs and maintaining strict line-ending (LF)
+   conformity.
 3. **Empirical Link & Test Verification:**
-   - Ran `scripts/check_dead_links.py`: Confirmed all 8 links return `200 OK`, `All links are healthy! 🎉`, and exit code 0.
+   - Ran `scripts/check_dead_links.py`: Confirmed all 8 links return `200 OK`,
+     `All links are healthy! 🎉`, and exit code 0.
    - Ran `npm test`: 8 test suites, 50 unit tests passed (100%).
    - Ran `npm run lint`: 0 ESLint errors and warnings.
    - Ran `python -m pytest tests/`: 61 unit tests passed (100%).
@@ -45,6 +75,7 @@ Under IANA specifications (RFC 2606 & RFC 6761), `example.com` only serves the r
 ## 📊 Software Engineering Architecture Diagrams
 
 ### 1. System Architecture Diagram
+
 ```mermaid
 graph TD
     subgraph Data_Layer ["Data Storage and Source of Truth"]
@@ -74,6 +105,7 @@ graph TD
 ```
 
 ### 2. Sequence Diagram
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -100,6 +132,7 @@ sequenceDiagram
 ```
 
 ### 3. Class Diagram
+
 ```mermaid
 classDiagram
     class EventEntity {
@@ -146,11 +179,11 @@ classDiagram
 
 ## 📂 Files Modified & Code Diffs
 
-| File | Status | Line Range | Summary of Changes |
-|------|--------|------------|--------------------|
-| `data/events.yaml` | Modified (`M`) | L15, L34, L53, L72, L91, L110, L129, L148 | Replaced 404 subpath URLs with valid `https://example.com` URLs |
-| `src/data/events.json` | Modified (`M`) | L16, L37, L58, L79, L100, L121, L142, L163 | Synchronized compiled JSON event URLs with YAML source |
-| `docs/contributions/ISSUE-220.0.md` | Added (`A`) | L1-L320 | Comprehensive solution documentation, diagrams, evidence, and project proposal |
+| File                                | Status         | Line Range                                 | Summary of Changes                                                             |
+| ----------------------------------- | -------------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
+| `data/events.yaml`                  | Modified (`M`) | L15, L34, L53, L72, L91, L110, L129, L148  | Replaced 404 subpath URLs with valid `https://example.com` URLs                |
+| `src/data/events.json`              | Modified (`M`) | L16, L37, L58, L79, L100, L121, L142, L163 | Synchronized compiled JSON event URLs with YAML source                         |
+| `docs/contributions/ISSUE-220.0.md` | Added (`A`)    | L1-L320                                    | Comprehensive solution documentation, diagrams, evidence, and project proposal |
 
 ### Code Snippet Diffs
 
@@ -235,9 +268,11 @@ classDiagram
 
 ## 🔬 Execution Evidence & Task Output
 
-The following test suites, linting routines, and validation tools were executed locally to confirm the fix with 0 regressions.
+The following test suites, linting routines, and validation tools were executed
+locally to confirm the fix with 0 regressions.
 
 ### 1. Link Guardian Reachability Output (`scripts/check_dead_links.py`)
+
 ```bash
 $ python scripts/check_dead_links.py
 Reading events from: C:\Ayush\Desktop\du-event-board\data\events.yaml
@@ -255,6 +290,7 @@ All links are healthy! 🎉
 ```
 
 ### 2. Frontend Vitest Unit Test Output (`npm test`)
+
 ```bash
 $ npm test
 > du-event-board@0.1.0 test
@@ -277,6 +313,7 @@ $ npm test
 ```
 
 ### 3. Backend PyTest Test Suite Output (`python -m pytest tests/`)
+
 ```bash
 $ python -m pytest tests/
 ============================= test session starts =============================
@@ -296,6 +333,7 @@ tests\test_sync_to_sheet.py ....                                         [100%]
 ```
 
 ### 4. ESLint Static Analysis Output (`npm run lint`)
+
 ```bash
 $ npm run lint
 > du-event-board@0.1.0 lint
@@ -305,6 +343,7 @@ $ npm run lint
 ```
 
 ### 5. Vite Production Build Output (`npm run build`)
+
 ```bash
 $ npm run build
 > du-event-board@0.1.0 prebuild
@@ -334,42 +373,67 @@ dist/assets/index-e5HTkTg9.js   501.77 kB │ gzip: 155.70 kB
 ## 🎯 Open Source Project Proposal & Contribution Statement
 
 ### 1. Project Overview
-- **Title**: DU Event Board Sample Link Reliability & Health Guardian Remediation
-- **Abstract**: This contribution addresses unreachable 404 event links in `data/events.yaml` detected by the Link Guardian automated monitoring suite. By updating sample events to canonical, reachable URLs and regenerating the compiled JSON frontend data, we ensure automated CI checks pass without false positives while providing dependable test fixtures.
-- **Problem Statement**: Scheduled weekly CI runs encountered 404 HTTP errors across 8 sample event records using non-existent subpaths on `example.com`, causing automated bug reports to trigger weekly.
-- **Proposed Solution**: Update seed URLs in `data/events.yaml` to valid `https://example.com` endpoints, compile synchronized `src/data/events.json` data, and verify link checker and test suite execution.
+
+- **Title**: DU Event Board Sample Link Reliability & Health Guardian
+  Remediation
+- **Abstract**: This contribution addresses unreachable 404 event links in
+  `data/events.yaml` detected by the Link Guardian automated monitoring suite.
+  By updating sample events to canonical, reachable URLs and regenerating the
+  compiled JSON frontend data, we ensure automated CI checks pass without false
+  positives while providing dependable test fixtures.
+- **Problem Statement**: Scheduled weekly CI runs encountered 404 HTTP errors
+  across 8 sample event records using non-existent subpaths on `example.com`,
+  causing automated bug reports to trigger weekly.
+- **Proposed Solution**: Update seed URLs in `data/events.yaml` to valid
+  `https://example.com` endpoints, compile synchronized `src/data/events.json`
+  data, and verify link checker and test suite execution.
 
 ### 2. Technical Implementation
-- **Architecture**: Integrated data validation pipeline combining PyYAML schema parsing, HTTP status verification via `requests`, JSON compilation via `generate_events_json.py`, and React component consumption.
-- **Technologies**: Python 3.11/3.12, PyYAML, Requests, PyTest, Node.js, React, Vitest, Vite.
-- **Key Features**: Canonical reachable URLs, zero dead link warnings, 100% CI compliance, synchronous YAML-to-JSON data integrity.
-- **Dependencies**: No new dependencies added; leverages existing `requests` and `pyyaml` packages.
+
+- **Architecture**: Integrated data validation pipeline combining PyYAML schema
+  parsing, HTTP status verification via `requests`, JSON compilation via
+  `generate_events_json.py`, and React component consumption.
+- **Technologies**: Python 3.11/3.12, PyYAML, Requests, PyTest, Node.js, React,
+  Vitest, Vite.
+- **Key Features**: Canonical reachable URLs, zero dead link warnings, 100% CI
+  compliance, synchronous YAML-to-JSON data integrity.
+- **Dependencies**: No new dependencies added; leverages existing `requests`
+  and `pyyaml` packages.
 
 ### 3. Timeline & Deliverables
+
 - **Milestones**:
-  - Milestone 1: Issue eligibility and upstream sync verification (`oss-issue-validator`).
-  - Milestone 2: Update `data/events.yaml` and regenerate `src/data/events.json`.
-  - Milestone 3: Run comprehensive local test suites (Vitest, PyTest, ESLint, Vite build, dead-link check).
-  - Milestone 4: DCO sign-off, push to fork, upstream PR creation, and dashboard sync.
+  - Milestone 1: Issue eligibility and upstream sync verification
+    (`oss-issue-validator`).
+  - Milestone 2: Update `data/events.yaml` and regenerate
+    `src/data/events.json`.
+  - Milestone 3: Run comprehensive local test suites (Vitest, PyTest, ESLint,
+    Vite build, dead-link check).
+  - Milestone 4: DCO sign-off, push to fork, upstream PR creation, and
+    dashboard sync.
 - **Deliverables**:
   - `data/events.yaml`
   - `src/data/events.json`
   - `docs/contributions/ISSUE-220.0.md`
-- **Buffer Time**: 1 day allocated for maintainer feedback and CI review verification.
+- **Buffer Time**: 1 day allocated for maintainer feedback and CI review
+  verification.
 
 ### 4. Community & Contribution
+
 - **License**: MIT License (governing `data-umbrella/du-event-board`).
 
 ---
 
 ## 💬 Community & Slack Maintainer Briefing Statement
 
-Use the following copy-pasteable message for the **Data Umbrella Slack** / Discord channel or GitHub discussion to brief maintainers about this contribution:
+Use the following copy-pasteable message for the **Data Umbrella Slack** /
+Discord channel or GitHub discussion to brief maintainers about this
+contribution:
 
 ```text
 Hi @ivanov @sanvishukla and Data Umbrella community! 👋
 
-I have submitted a fix for Issue #220 (Fixes #220.0 — Broken Event Links Detected). 
+I have submitted a fix for Issue #220 (Fixes #220.0 — Broken Event Links Detected).
 
 The 8 initial sample event entries in `data/events.yaml` previously pointed to non-existent subpaths under `example.com` (`https://example.com/python-poa`, etc.). Under RFC 2606 / RFC 6761, `example.com` returns HTTP 404 for arbitrary subpaths, which caused the scheduled Weekly Link Guardian action to fail and open bug reports.
 
