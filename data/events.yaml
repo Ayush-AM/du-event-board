@@ -12,7 +12,7 @@ events:
     country: "Brazil"
     region: "South America"
     category: "Technology"
-    url: "https://example.com/python-poa"
+    url: "https://example.com"
     tags:
       - python
       - programming
@@ -31,7 +31,7 @@ events:
     country: "Brazil"
     region: "South America"
     category: "Technology"
-    url: "https://example.com/react-sp"
+    url: "https://example.com"
     tags:
       - react
       - javascript
@@ -50,7 +50,7 @@ events:
     country: "Brazil"
     region: "South America"
     category: "Technology"
-    url: "https://example.com/oss-friday-cwb"
+    url: "https://example.com"
     tags:
       - open-source
       - community
@@ -69,7 +69,7 @@ events:
     country: "Brazil"
     region: "South America"
     category: "Education"
-    url: "https://example.com/ds-bootcamp-rj"
+    url: "https://example.com"
     tags:
       - data-science
       - machine-learning
@@ -88,7 +88,7 @@ events:
     country: "Brazil"
     region: "South America"
     category: "Technology"
-    url: "https://example.com/devops-bh"
+    url: "https://example.com"
     tags:
       - devops
       - docker
@@ -107,7 +107,7 @@ events:
     country: "Brazil"
     region: "South America"
     category: "Design"
-    url: "https://example.com/ux-workshop-poa"
+    url: "https://example.com"
     tags:
       - design
       - ux
@@ -126,7 +126,7 @@ events:
     country: "Brazil"
     region: "South America"
     category: "Technology"
-    url: "https://example.com/rust-intro-sp"
+    url: "https://example.com"
     tags:
       - rust
       - programming
@@ -145,7 +145,7 @@ events:
     country: "Brazil"
     region: "South America"
     category: "Community"
-    url: "https://example.com/hackathon-floripa"
+    url: "https://example.com"
     tags:
       - hackathon
       - community
